@@ -1,0 +1,18 @@
+version: "2.1"
+
+services: 
+    portainer:
+        image: portainer/portainer:latest
+        container_name: portainer
+        privileged: true
+        ports: 
+            - 9000:9000
+            - 9001:8000
+        volumes: 
+            - /var/run/docker.sock:/var/run/docker.sock
+        restart: always
+
+networks: 
+    default:
+        external: 
+            name: proxy-network
