@@ -22,4 +22,4 @@ services:
             MYSQL_USER: sonar
             MYSQL_PASSWORD: sonarmysql
             MYSQL_ROOT_PASSWORD: sonarroot
-        
+        command: [--max-allowed-packet=67108864]
