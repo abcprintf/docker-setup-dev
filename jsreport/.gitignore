@@ -1,6 +1,2 @@
-*
-!Dockerfile
-!docker-compose.yml
-!jsreport.config.json
-!README.md
-!.gitignore
+# folder data
+data

@@ -1,0 +1,15 @@
+version: '3.7'
+
+services:
+  jsreport-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: jsreport/jsreport:3.11.3-full
+    container_name: jsreport
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 5488:5488
+    volumes:
+      - ./data:/jsreport/data
