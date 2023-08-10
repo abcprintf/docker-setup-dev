@@ -1,0 +1,17 @@
+version: '3.3'
+
+services:
+  chat2db:
+    image: chat2db/chat2db:latest
+    container_name: chat2db
+    volumes:
+      - ./chat2db-data:/app/data
+    ports:
+      - 10824:10824  # <Host Port>:<Container Port>
+    restart: always
+    networks:
+      - compose_network
+
+networks:
+  compose_network:
+    driver: bridge
