@@ -4,7 +4,7 @@ services:
   oracle-db:
     image: container-registry.oracle.com/database/free:latest
     environment:
-      - ORACLE_PWD=Oracle@123
+      - ORACLE_PWD=Oracle123
       - ORACLE_CHARACTERSET=AL32UTF8
     ports:
       - 1521:1521
