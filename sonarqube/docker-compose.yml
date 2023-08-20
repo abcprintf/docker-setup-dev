@@ -2,7 +2,7 @@ version: '2'
 
 services:
     sonar:
-        image: sonarqube:lts-alpine
+        image: sonarqube:community
         ports:
             - "9000:9000" 
         depends_on:
@@ -11,6 +11,10 @@ services:
             - SONARQUBE_JDBC_URL=jdbc:mysql://sonardb:3306/sonar?useUnicode=true&characterEncoding=utf8
             - SONARQUBE_JDBC_USERNAME=sonar
             - SONARQUBE_JDBC_PASSWORD=sonarmysql
+        volumes:
+            - ./sonarqube/sonarqube_data:/opt/sonarqube/data
+            - ./sonarqube/sonarqube_extensions:/opt/sonarqube/extensions
+            - ./sonarqube/sonarqube_logs:/opt/sonarqube/logs
     sonardb:
         image: mysql:5.7.17
         volumes:
