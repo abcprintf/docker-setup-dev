@@ -24,6 +24,7 @@ services:
       - ./es-app/logs:/usr/share/elasticsearch/logs
     ports:
       - 9200:9200
+      - 9300:9300
     networks:
       - es-net
     logging:
@@ -66,7 +67,32 @@ services:
       - es-net
     depends_on:
       - es-app
-    # restart: unless-stopped
+  # Metricbeat
+  mb-app:
+    image: docker.elastic.co/beats/metricbeat:8.9.1
+    container_name: mb-app
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es-app:9200
+    volumes:
+      - ./mb-app:/usr/share/metricbeat/data
+    networks:
+      - es-net
+    depends_on:
+      - es-app
+  # Filebeat
+  fb-app:
+    image: docker.elastic.co/beats/filebeat:8.9.1
+    container_name: fb-app
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es-app:9200
+      - setup.kibana.host=kb-app:5601
+      - output.elasticsearch.hosts=["es-app:9200"]
+    volumes:
+      - ./fb-app:/usr/share/filebeat/data
+    networks:
+      - es-net
+    depends_on:
+      - es-app
 
 networks:
   es-net:
