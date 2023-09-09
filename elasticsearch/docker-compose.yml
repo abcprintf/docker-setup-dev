@@ -6,36 +6,67 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.9.1
     container_name: es-app
     environment:
-      # - node.name=es-app
-      # - cluster.name=es-docker-cluster
+      - node.name=es-app
       - xpack.security.enabled=false
       - discovery.seed_hosts=es-app
       - discovery.type=single-node
-      # - cluster.initial_master_nodes=es-app
-      # - bootstrap.memory_lock=true
-      # - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
+      nofile:
+        soft: 65535
+        hard: 65535
     volumes:
-      - ./esdata1:/usr/share/elasticsearch/data
+      - ./es-app/data:/usr/share/elasticsearch/data
+      - ./es-app/logs:/usr/share/elasticsearch/logs
     ports:
       - 9200:9200
     networks:
       - es-net
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "5"
   # Kibana
   kb-app:
     image: docker.elastic.co/kibana/kibana:8.9.1
     container_name: kb-app
     environment:
       - ELASTICSEARCH_HOSTS=http://es-app:9200
+      - xpack.security.enabled=false
+    volumes:
+      # - ./kb-app/config/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./kb-app/data:/usr/share/kibana/data
+      - ./kb-app/logs:/usr/share/kibana/logs
     ports:
       - 5601:5601
     networks:
       - es-net
     depends_on:
       - es-app
+  # Logstash
+  ls-app:
+    image: docker.elastic.co/logstash/logstash:8.9.1
+    container_name: ls-app
+    volumes:
+      - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    environment:
+      LS_JAVA_OPTS: "-Xmx1g -Xms1g"
+    ports:
+      - 5044:5044
+      - 50000:50000/tcp
+      - 50000:50000/udp
+      - 9600:9600
+    networks:
+      - es-net
+    depends_on:
+      - es-app
+    # restart: unless-stopped
 
 networks:
   es-net:
