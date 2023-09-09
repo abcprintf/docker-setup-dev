@@ -1,0 +1,6 @@
+*
+!config
+!config/logstash.yml
+!pipeline
+!pipeline/logstash.conf
+!.gitignore
