@@ -1,0 +1,34 @@
+version: '3'
+
+services:
+  es-app:
+    image: elasticsearch:8.9.1
+    container_name: es-app
+    environment:
+      - discovery.type=single-node
+      - cluster.name=es-docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - ./es-data:/usr/share/elasticsearch/data
+    networks:
+      - es-net
+
+  kibana-app:
+    image: kibana:8.9.1
+    container_name: kibana-app
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es-app:9200
+      - xpack.security.enabled=false
+    ports:
+      - 5601:5601
+    networks:
+      - es-net
+
+networks:
+  es-net:
+    driver: bridge
