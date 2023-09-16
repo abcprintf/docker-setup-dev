@@ -10,6 +10,17 @@ const run = async () => {
             title: 'Test'
         }
     });
+
+    const body = await client.search({
+        index: 'my-index',
+        body: {
+            query: {
+                match: { title: 'Test' }
+            }
+        }
+    });
+
+    console.log(body.hits.hits);
 };
 
 run().catch(console.log);
