@@ -2,8 +2,8 @@ version: '3.8'
 
 services:
   postgres:
-    container_name: postgres_container
-    image: postgres:14.5-alpine
+    container_name: postgres-container
+    image: postgres:16-alpine
     restart: unless-stopped
     environment:
       - POSTGRES_USER=postgres
@@ -11,20 +11,20 @@ services:
     ports:
       - '5432:5432'
     volumes: 
-      - postgres:/var/lib/postgresql/data
+      - ./postgresql-data:/var/lib/postgresql/data
     networks:
       - postgres
   pgadmin:
-    container_name: pgadmin_container
+    container_name: pgadmin-container
     image: dpage/pgadmin4
     environment:
       - PGADMIN_DEFAULT_EMAIL=pgadmin4@pgadmin.org
       - PGADMIN_DEFAULT_PASSWORD=12345678
       - PGADMIN_CONFIG_SERVER_MODE=False
     ports:
-      - '5050:80'
+      - '5055:80'
     volumes:
-      - pgadmin:/var/lib/pgadmin
+      - ./pgadmin-data:/var/lib/pgadmin
     networks:
       - postgres
     restart: unless-stopped
