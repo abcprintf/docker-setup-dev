@@ -3,8 +3,8 @@ version: '3.7'
 # The services of your app
 services:
   jenkins-app:
-    image: jenkins/jenkins:lts
-    container_name: jenkins
+    image: jenkins/jenkins:latest
+    container_name: jenkins-service
     ports:
       - 8080:8080
       - 50000:50000
