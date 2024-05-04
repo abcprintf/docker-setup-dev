@@ -1,0 +1,5 @@
+data/
+letsencrypt/
+info.txt
+!docker-compose.yml
+!.gitignore
