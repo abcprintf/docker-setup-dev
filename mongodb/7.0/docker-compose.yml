@@ -4,10 +4,10 @@ services:
 
   mongodb_version_70:
     container_name: mongodb_version_70
-    # image: mongo:7.0
-    build: 
-      context: .
-      dockerfile: Dockerfile
+    image: mongo:7.0
+    # build: 
+    #   context: .
+    #   dockerfile: Dockerfile
     ports:
       - 27018:27017
     restart: always
