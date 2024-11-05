@@ -3,7 +3,7 @@ version: '3.7'
 services:
   # Elasticsearch
   es-app:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.9.1
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
     container_name: es-app
     environment:
       - node.name=es-app
@@ -19,6 +19,14 @@ services:
       nofile:
         soft: 65535
         hard: 65535
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: '2g'
+        reservations:
+          cpus: '1.0'
+          memory: '1g'
     volumes:
       - ./es-app/data:/usr/share/elasticsearch/data
       - ./es-app/logs:/usr/share/elasticsearch/logs
@@ -32,15 +40,23 @@ services:
       options:
         max-size: "10m"
         max-file: "5"
+
   # Kibana
   kb-app:
-    image: docker.elastic.co/kibana/kibana:8.9.1
+    image: docker.elastic.co/kibana/kibana:8.15.0
     container_name: kb-app
     environment:
       - ELASTICSEARCH_HOSTS=http://es-app:9200
       - xpack.security.enabled=false
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: '1g'
+        reservations:
+          cpus: '0.5'
+          memory: '512m'
     volumes:
-      # - ./kb-app/config/kibana.yml:/usr/share/kibana/config/kibana.yml
       - ./kb-app/data:/usr/share/kibana/data
       - ./kb-app/logs:/usr/share/kibana/logs
     ports:
@@ -49,15 +65,24 @@ services:
       - es-net
     depends_on:
       - es-app
+
   # Logstash
   ls-app:
-    image: docker.elastic.co/logstash/logstash:8.9.1
+    image: docker.elastic.co/logstash/logstash:8.15.0
     container_name: ls-app
+    environment:
+      LS_JAVA_OPTS: "-Xmx1g -Xms1g"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: '1g'
+        reservations:
+          cpus: '0.5'
+          memory: '512m'
     volumes:
       - ./logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
-    environment:
-      LS_JAVA_OPTS: "-Xmx1g -Xms1g"
     ports:
       - 5044:5044
       - 50000:50000/tcp
@@ -67,26 +92,44 @@ services:
       - es-net
     depends_on:
       - es-app
+
   # Metricbeat
   mb-app:
-    image: docker.elastic.co/beats/metricbeat:8.9.1
+    image: docker.elastic.co/beats/metricbeat:8.15.0
     container_name: mb-app
     environment:
       - ELASTICSEARCH_HOSTS=http://es-app:9200
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '256m'
+        reservations:
+          cpus: '0.25'
+          memory: '128m'
     volumes:
       - ./mb-app:/usr/share/metricbeat/data
     networks:
       - es-net
     depends_on:
       - es-app
+
   # Filebeat
   fb-app:
-    image: docker.elastic.co/beats/filebeat:8.9.1
+    image: docker.elastic.co/beats/filebeat:8.15.0
     container_name: fb-app
     environment:
       - ELASTICSEARCH_HOSTS=http://es-app:9200
       - setup.kibana.host=kb-app:5601
       - output.elasticsearch.hosts=["es-app:9200"]
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: '256m'
+        reservations:
+          cpus: '0.25'
+          memory: '128m'
     volumes:
       - ./fb-app:/usr/share/filebeat/data
     networks:
