@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  minio:
+    image: minio/minio:latest
+    container_name: minio
+    ports:
+      - "9000:9000"    # Port สำหรับเข้าถึง MinIO Console
+      - "9001:9001"    # Port สำหรับเข้าถึง MinIO Admin Console
+    environment:
+      MINIO_ROOT_USER: minioadmin  # กำหนด username ของ admin
+      MINIO_ROOT_PASSWORD: minioadmin123  # กำหนด password ของ admin
+    volumes:
+      - ./minio_data:/data  # กำหนดโฟลเดอร์ที่เก็บข้อมูลของ MinIO
+    command: server /data --console-address ":9001"  # เริ่มเซิร์ฟเวอร์ MinIO และตั้งค่าพอร์ตสำหรับ console
+
+volumes:
+  minio_data:
+    driver: local
