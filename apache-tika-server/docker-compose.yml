@@ -1,0 +1,20 @@
+version: '3.7'
+
+services:
+  tika:
+    container_name: tika-container
+    # image: apache/tika-server:1.26
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - '9998:9998'
+    networks:
+      - tika-network
+    volumes:
+      - ./tika-data:/var/lib/tika
+    restart: unless-stopped
+
+networks:
+  tika-network:
+    driver: bridge
