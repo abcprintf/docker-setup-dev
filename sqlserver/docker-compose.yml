@@ -11,9 +11,9 @@ services:
     ports:
       - 1433:1433
     volumes:
-      - mssql_data:/var/opt/mssql/data
-      - mssql_log:/var/opt/mssql/log
-      - mssql_backup:/var/opt/mssql/backup
+      - ./mssql_data:/var/opt/mssql/data
+      - ./mssql_log:/var/opt/mssql/log
+      - ./mssql_backup:/var/opt/mssql/backup
     # https://docs.docker.com/compose/compose-file/compose-file-v3/#environment
     environment:
       # List of all SQL Server environment variables:
