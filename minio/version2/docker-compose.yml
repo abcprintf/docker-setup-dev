@@ -1,0 +1,22 @@
+version: "3.8"
+
+services:
+  minio:
+    image: quay.io/minio/minio:RELEASE.2023-02-22T18-23-45Z
+    command: server --console-address ":9090"
+    ports:
+      - 9000:9000
+      - 9090:9090
+    env_file:
+      - .env
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    hostname: minio
+    volumes:
+      - minio-data:/mnt/data
+
+volumes:
+  minio-data:
