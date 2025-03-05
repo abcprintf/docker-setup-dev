@@ -5,8 +5,8 @@ services:
     image: quay.io/minio/minio:RELEASE.2023-02-22T18-23-45Z
     command: server --console-address ":9090"
     ports:
-      - 9000:9000
-      - 9090:9090
+      - 9000:9000 # port สำหรับ minio server
+      - 9090:9090 # port สำหรับ console
     env_file:
       - .env
     healthcheck:

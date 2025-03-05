@@ -2,4 +2,6 @@
 !docker-compose.yml
 !README.md
 !.env.example
+!postgresql.conf
+!postgresql-log/
 !.gitignore
