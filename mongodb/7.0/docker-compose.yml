@@ -24,6 +24,7 @@ services:
       - ./db:/data/db
     networks:
       - mongo-network
+    command: ["--bind_ip_all", "--wiredTigerCacheSizeGB", "1"]
 
 networks:
   mongo-network:

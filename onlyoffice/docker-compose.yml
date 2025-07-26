@@ -1,0 +1,13 @@
+version: '3.5'
+
+services:
+  onlyoffice-document-server:
+    image: onlyoffice/documentserver
+    container_name: onlyoffice-document-server
+    restart: always
+    ports:
+      - "8082:80"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/var/www/onlyoffice/Data
