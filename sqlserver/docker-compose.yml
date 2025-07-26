@@ -3,6 +3,7 @@
 version: "3.8"
 services:
   db:
+    platform: linux/amd64
     build:
       context: .
       dockerfile: Dockerfile
