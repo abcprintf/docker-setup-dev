@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vault Test Application</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .status {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .status-icon {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .status-icon.success {
+            background: #10b981;
+        }
+        
+        .status-icon.error {
+            background: #ef4444;
+        }
+        
+        .status-icon.loading {
+            background: #f59e0b;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.3s ease;
+            margin: 5px;
+        }
+        
+        .btn:hover {
+            background: #5a6fd8;
+        }
+        
+        .btn.danger {
+            background: #ef4444;
+        }
+        
+        .btn.danger:hover {
+            background: #dc2626;
+        }
+        
+        .btn.success {
+            background: #10b981;
+        }
+        
+        .btn.success:hover {
+            background: #059669;
+        }
+        
+        .secret-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        
+        .config-item:last-child {
+            border-bottom: none;
+        }
+        
+        .config-key {
+            font-weight: 600;
+            color: #475569;
+        }
+        
+        .config-value {
+            color: #64748b;
+            font-family: monospace;
+        }
+        
+        .log {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .alert {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+        
+        .alert.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+        
+        .alert.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Vault Test Application</h1>
+            <p>HashiCorp Vault Integration Demo</p>
+        </div>
+        
+        <div class="grid">
+            <!-- Vault Status Card -->
+            <div class="card">
+                <h3>🏗️ Vault Status</h3>
+                <div id="vault-status">
+                    <div class="status">
+                        <div class="status-icon loading"></div>
+                        <span>Checking connection...</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn" onclick="checkVaultStatus()">Refresh Status</button>
+                </div>
+            </div>
+            
+            <!-- Application Config Card -->
+            <div class="card">
+                <h3>⚙️ Application Config</h3>
+                <div id="app-config">
+                    <div class="status">
+                        <div class="status-icon loading"></div>
+                        <span>Loading configuration...</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn" onclick="loadConfig()">Reload Config</button>
+                    <button class="btn success" onclick="reloadConfig()">Reload from Vault</button>
+                </div>
+            </div>
+            
+            <!-- Secrets Management Card -->
+            <div class="card">
+                <h3>🔑 Secrets Management</h3>
+                <div id="secrets-list">
+                    <div class="status">
+                        <div class="status-icon loading"></div>
+                        <span>Loading secrets...</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn" onclick="listSecrets()">List Secrets</button>
+                    <button class="btn danger" onclick="clearCache()">Clear Cache</button>
+                </div>
+            </div>
+            
+            <!-- Database Connection Card -->
+            <div class="card">
+                <h3>🗄️ Database Connection</h3>
+                <div id="database-status">
+                    <div class="status">
+                        <div class="status-icon loading"></div>
+                        <span>Testing database config...</span>
+                    </div>
+                </div>
+                <div class="actions">
+                    <button class="btn" onclick="testDatabase()">Test Connection</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Activity Log -->
+        <div class="card">
+            <h3>📝 Activity Log</h3>
+            <div id="activity-log" class="log">Application started...\n</div>
+            <div class="actions">
+                <button class="btn" onclick="clearLog()">Clear Log</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let logContent = 'Application started...\n';
+        
+        // Utility functions
+        function log(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            logContent += `[${timestamp}] ${message}\n`;
+            document.getElementById('activity-log').textContent = logContent;
+            document.getElementById('activity-log').scrollTop = document.getElementById('activity-log').scrollHeight;
+        }
+        
+        function clearLog() {
+            logContent = '';
+            document.getElementById('activity-log').textContent = '';
+        }
+        
+        function showAlert(element, message, type = 'success') {
+            const alert = document.createElement('div');
+            alert.className = `alert ${type}`;
+            alert.textContent = message;
+            element.insertBefore(alert, element.firstChild);
+            
+            setTimeout(() => {
+                alert.remove();
+            }, 3000);
+        }
+        
+        // API functions
+        async function apiCall(url, options = {}) {
+            try {
+                const response = await fetch(url, options);
+                const data = await response.json();
+                
+                if (!data.success) {
+                    throw new Error(data.error || 'API call failed');
+                }
+                
+                return data;
+            } catch (error) {
+                log(`API Error: ${error.message}`);
+                throw error;
+            }
+        }
+        
+        // Vault Status
+        async function checkVaultStatus() {
+            const statusEl = document.getElementById('vault-status');
+            statusEl.innerHTML = '<div class="status"><div class="status-icon loading"></div><span>Checking connection...</span></div>';
+            
+            try {
+                const data = await apiCall('/api/vault/status');
+                log('Vault status checked successfully');
+                
+                statusEl.innerHTML = `
+                    <div class="status">
+                        <div class="status-icon success"></div>
+                        <span>Connected to Vault</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-key">Version:</span>
+                        <span class="config-value">${data.status.version}</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-key">Sealed:</span>
+                        <span class="config-value">${data.status.sealed ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div class="config-item">
+                        <span class="config-key">Cluster:</span>
+                        <span class="config-value">${data.status.cluster_name}</span>
+                    </div>
+                `;
+            } catch (error) {
+                statusEl.innerHTML = `
+                    <div class="status">
+                        <div class="status-icon error"></div>
+                        <span>Connection failed</span>
+                    </div>
+                    <div class="alert error">Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        // Application Config
+        async function loadConfig() {
+            const configEl = document.getElementById('app-config');
+            configEl.innerHTML = '<div class="status"><div class="status-icon loading"></div><span>Loading configuration...</span></div>';
+            
+            try {
+                const data = await apiCall('/api/config');
+                log('Configuration loaded successfully');
+                
+                let configHtml = '';
+                
+                if (data.config.database) {
+                    configHtml += '<h4>Database:</h4>';
+                    Object.entries(data.config.database).forEach(([key, value]) => {
+                        if (value) {
+                            configHtml += `<div class="config-item"><span class="config-key">${key}:</span><span class="config-value">${value}</span></div>`;
+                        }
+                    });
+                }
+                
+                if (data.config.api) {
+                    configHtml += '<h4>API:</h4>';
+                    Object.entries(data.config.api).forEach(([key, value]) => {
+                        configHtml += `<div class="config-item"><span class="config-key">${key}:</span><span class="config-value">${value}</span></div>`;
+                    });
+                }
+                
+                if (data.config.jwt) {
+                    configHtml += '<h4>JWT:</h4>';
+                    Object.entries(data.config.jwt).forEach(([key, value]) => {
+                        configHtml += `<div class="config-item"><span class="config-key">${key}:</span><span class="config-value">${value}</span></div>`;
+                    });
+                }
+                
+                configEl.innerHTML = configHtml || '<div class="status"><div class="status-icon error"></div><span>No configuration found</span></div>';
+                
+            } catch (error) {
+                configEl.innerHTML = `
+                    <div class="status">
+                        <div class="status-icon error"></div>
+                        <span>Failed to load config</span>
+                    </div>
+                    <div class="alert error">Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function reloadConfig() {
+            const configEl = document.getElementById('app-config');
+            
+            try {
+                await apiCall('/api/config/reload', { method: 'POST' });
+                log('Configuration reloaded from Vault');
+                showAlert(configEl, 'Configuration reloaded successfully!');
+                await loadConfig();
+            } catch (error) {
+                showAlert(configEl, `Failed to reload: ${error.message}`, 'error');
+            }
+        }
+        
+        // Secrets Management
+        async function listSecrets() {
+            const secretsEl = document.getElementById('secrets-list');
+            secretsEl.innerHTML = '<div class="status"><div class="status-icon loading"></div><span>Loading secrets...</span></div>';
+            
+            try {
+                const data = await apiCall('/api/vault/secrets?path=myapp/');
+                log(`Found ${data.secrets.length} secrets`);
+                
+                if (data.secrets.length === 0) {
+                    secretsEl.innerHTML = '<div class="status"><div class="status-icon error"></div><span>No secrets found</span></div>';
+                    return;
+                }
+                
+                let secretsHtml = '';
+                data.secrets.forEach(secret => {
+                    secretsHtml += `
+                        <div class="secret-item">
+                            <span>myapp/${secret}</span>
+                            <button class="btn" onclick="viewSecret('${secret}')">View</button>
+                        </div>
+                    `;
+                });
+                
+                secretsEl.innerHTML = secretsHtml;
+                
+            } catch (error) {
+                secretsEl.innerHTML = `
+                    <div class="status">
+                        <div class="status-icon error"></div>
+                        <span>Failed to load secrets</span>
+                    </div>
+                    <div class="alert error">Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        async function viewSecret(secretName) {
+            try {
+                const data = await apiCall(`/api/vault/secret/${secretName}`);
+                log(`Viewed secret: ${secretName}`);
+                
+                const secretData = JSON.stringify(data.secret, null, 2);
+                alert(`Secret: myapp/${secretName}\n\n${secretData}`);
+            } catch (error) {
+                alert(`Failed to view secret: ${error.message}`);
+            }
+        }
+        
+        async function clearCache() {
+            try {
+                await apiCall('/api/vault/cache', { method: 'DELETE' });
+                log('Cache cleared successfully');
+                showAlert(document.getElementById('secrets-list'), 'Cache cleared!');
+            } catch (error) {
+                showAlert(document.getElementById('secrets-list'), `Failed to clear cache: ${error.message}`, 'error');
+            }
+        }
+        
+        // Database Connection
+        async function testDatabase() {
+            const dbEl = document.getElementById('database-status');
+            dbEl.innerHTML = '<div class="status"><div class="status-icon loading"></div><span>Testing database connection...</span></div>';
+            
+            try {
+                const data = await apiCall('/api/database/test');
+                log('Database configuration tested');
+                
+                const status = data.ready ? 'Ready' : 'Not configured';
+                const iconClass = data.ready ? 'success' : 'error';
+                
+                let configHtml = `
+                    <div class="status">
+                        <div class="status-icon ${iconClass}"></div>
+                        <span>Database ${status}</span>
+                    </div>
+                `;
+                
+                Object.entries(data.config).forEach(([key, value]) => {
+                    if (value) {
+                        configHtml += `<div class="config-item"><span class="config-key">${key}:</span><span class="config-value">${value}</span></div>`;
+                    }
+                });
+                
+                dbEl.innerHTML = configHtml;
+                
+            } catch (error) {
+                dbEl.innerHTML = `
+                    <div class="status">
+                        <div class="status-icon error"></div>
+                        <span>Database test failed</span>
+                    </div>
+                    <div class="alert error">Error: ${error.message}</div>
+                `;
+            }
+        }
+        
+        // Initialize page
+        async function initializePage() {
+            log('Initializing application interface...');
+            
+            await checkVaultStatus();
+            await loadConfig();
+            await listSecrets();
+            await testDatabase();
+            
+            log('Application interface ready');
+        }
+        
+        // Start the application
+        document.addEventListener('DOMContentLoaded', initializePage);
+        
+        // Auto-refresh every 30 seconds
+        setInterval(() => {
+            checkVaultStatus();
+        }, 30000);
+    </script>
+</body>
+</html>
