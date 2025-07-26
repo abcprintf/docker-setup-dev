@@ -1,0 +1,48 @@
+services:
+  vault:
+    image: hashicorp/vault:latest
+    container_name: vault
+    restart: unless-stopped
+    ports:
+      - "8201:8201"
+    volumes:
+      - vault-data:/vault/data
+      - vault-logs:/vault/logs
+      # - ./config:/vault/config  # Commented out to use VAULT_LOCAL_CONFIG only
+    tmpfs:
+      - /vault/config
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: myroot
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8201
+    # command: vault server -config=/vault/config  # Use default command
+    healthcheck:
+      test: ["CMD", "vault", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Vault UI (if you want a separate UI container)
+  # vault-ui:
+  #   image: djenriquez/vault-ui:latest
+  #   container_name: vault-ui
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     VAULT_URL_DEFAULT: http://vault:8200
+  #     VAULT_AUTH_DEFAULT: USERPASS
+  #   depends_on:
+  #     - vault
+
+volumes:
+  vault-data:
+    driver: local
+  vault-logs:
+    driver: local
+
+networks:
+  default:
+    name: vault-network
