@@ -16,6 +16,12 @@ services:
       - 8088:8080
     environment:
       - NODE_ENV=production
+      - SMTP_HOST=mailhog
+      - SMTP_PORT=1025
+      - SMTP_SECURE=false
+      - SMTP_USERNAME=
+      - SMTP_PASSWORD=
+      - SMTP_FROM_ADDRESS=no-reply@example.com
     networks:
       - infisical
 
@@ -48,6 +54,17 @@ services:
       timeout: 10s
       retries: 10
 
+  mailhog:
+    platform: linux/amd64
+    image: mailhog/mailhog
+    container_name: infisical-mailhog
+    restart: always
+    ports:
+      - 1025:1025 # SMTP port
+      - 8025:8025 # Web UI port
+    networks:
+      - infisical
+
 volumes:
   pg_data:
     driver: local
@@ -56,3 +73,4 @@ volumes:
 
 networks:
   infisical:
+    driver: bridge
