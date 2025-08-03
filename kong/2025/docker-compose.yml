@@ -1,0 +1,105 @@
+
+volumes:
+  kong_db_data: {}  # Named volume to persist Postgres data across container restarts
+
+networks:
+  kong-ee-net:      # Custom bridge network for isolated Kong and Postgres communication
+    driver: bridge
+
+# Common environment variables used by Kong services (bootstrap and CP)
+x-kong-config: &kong-env
+  KONG_DATABASE: postgres             # Use Postgres as the backing database
+  KONG_PG_HOST: kong-database         # Hostname of the Postgres service
+  KONG_PG_DATABASE: kong              # Name of the database to connect to
+  KONG_PG_USER: kong                  # Database username
+  KONG_PG_PASSWORD: kong              # Database password
+
+services:
+
+  kong-database:
+    container_name: kong-database
+    image: postgres:15           # Official Postgres image (compatible version)
+    restart: unless-stopped      # Restart unless manually stopped
+    volumes:
+      - kong_db_data:/var/lib/postgresql/data  # Mount the volume for persistent data
+    networks:
+      - kong-ee-net                  # Connect to the shared Kong network
+    environment:
+      POSTGRES_USER: kong            # Set DB user inside the container
+      POSTGRES_DB: kong              # Create this database on first run
+      POSTGRES_PASSWORD: kong        # Set the password for the DB user
+    healthcheck:                     # Ensure the DB is ready before starting dependent services
+      test: ["CMD", "pg_isready", "-U", "kong"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+    ports:
+      - '5432:5432'                  # Optional: expose Postgres on localhost for debugging
+
+  kong-bootstrap:
+    image: 'kong:3.8.0'  # Kong Community Gateway
+    container_name: kong-bootstrap
+    networks:
+      - kong-ee-net
+    depends_on:
+      kong-database:
+        condition: service_healthy   # Wait until Postgres is up and healthy
+    restart: "no"  # Don't restart bootstrap container
+    environment:
+      <<: *kong-env                 # Reuse environment config from x-kong-config
+    command: kong migrations bootstrap  # Run DB migrations to initialize Kong schema
+
+  kong-gateway:
+    image: 'kong:3.8.0'  # Kong Community Gateway
+    container_name: kong-gateway
+    restart: unless-stopped
+    networks:
+      - kong-ee-net
+    environment:
+      <<: *kong-env
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001  # Admin API on HTTP only
+      KONG_PROXY_LISTEN: 0.0.0.0:8000, 0.0.0.0:8443 ssl  # Enable proxy listeners
+      KONG_PLUGINS: bundled,prometheus  # Enable prometheus plugin for monitoring
+      KONG_LOG_LEVEL: info  # Set appropriate log level
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout  # Enable admin access logs
+      KONG_ADMIN_ERROR_LOG: /dev/stderr  # Enable admin error logs
+      KONG_PROXY_ACCESS_LOG: /dev/stdout  # Enable proxy access logs
+      KONG_PROXY_ERROR_LOG: /dev/stderr  # Enable proxy error logs
+    depends_on:
+      kong-bootstrap:
+        condition: service_completed_successfully  # Start only after bootstrap has succeeded
+    ports:
+      - "8000:8000"  # Proxy HTTP
+      - "8443:8443"  # Proxy HTTPS
+      - "8001:8001"  # Admin API HTTP
+
+  # Prometheus for metrics collection and monitoring
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: kong-prometheus
+    networks:
+      - kong-ee-net
+    ports:
+      - "9090:9090"      # Prometheus Web UI
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+
+  # Konga - Kong Admin GUI (Community)
+  konga:
+    image: pantsel/konga:latest
+    container_name: kong-konga
+    networks:
+      - kong-ee-net
+    ports:
+      - "1337:1337"     # Konga Web UI
+    environment:
+      NODE_ENV: production
+      KONGA_HOOK_TIMEOUT: 120000
+    depends_on:
+      - kong-gateway
