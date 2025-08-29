@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  mailhog:
+    platform: 
+      linux/amd64
+    image: mailhog/mailhog:latest
+    container_name: mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"   # SMTP port
+      - "8025:8025"   # Web UI
