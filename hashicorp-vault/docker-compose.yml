@@ -1,5 +1,6 @@
 services:
   vault:
+    platform: linux/amd64
     image: hashicorp/vault:latest
     container_name: vault
     restart: unless-stopped
@@ -23,6 +24,7 @@ services:
 
   # Vault UI สำหรับทีม
   vault-ui:
+    platform: linux/amd64
     image: djenriquez/vault-ui:latest
     container_name: vault-ui
     restart: unless-stopped
