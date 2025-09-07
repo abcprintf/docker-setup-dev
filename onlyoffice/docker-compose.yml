@@ -2,7 +2,8 @@ version: '3.5'
 
 services:
   onlyoffice-document-server:
-    image: onlyoffice/documentserver
+    platform: linux/amd64
+    image: onlyoffice/documentserver:latest
     container_name: onlyoffice-document-server
     restart: always
     ports:
@@ -11,3 +12,4 @@ services:
       - .env
     volumes:
       - ./data:/var/www/onlyoffice/Data
+      - ./logs:/var/log/onlyoffice
