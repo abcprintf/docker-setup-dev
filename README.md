@@ -1,3 +1,5 @@
+[English](README.md) | [ภาษาไทย](README_TH.md)
+
 # new-docker-setup
 
 ## Project Folder Structure

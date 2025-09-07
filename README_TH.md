@@ -1,3 +1,5 @@
+[ภาษาไทย](README_TH.md) | [English](README.md)
+
 # new-docker-setup (ภาษาไทย)
 
 ## โครงสร้างโฟลเดอร์หลัก
