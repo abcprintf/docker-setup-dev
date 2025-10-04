@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: nginx-ignition-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-nginx_ignition}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - nginx-ignition-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  nginx-ignition:
+    platform: linux/amd64
+    container_name: nginx-ignition
+    image: dillmann/nginx-ignition:latest
+    restart: unless-stopped
+    environment:
+      NGINX_IGNITION_DATABASE_DRIVER: postgres
+      NGINX_IGNITION_DATABASE_HOST: postgres
+      NGINX_IGNITION_DATABASE_PORT: ${POSTGRESDB_PORT:-5432}
+      NGINX_IGNITION_DATABASE_NAME: ${POSTGRES_DB:-nginx_ignition}
+      NGINX_IGNITION_DATABASE_SSL_MODE: disable
+      NGINX_IGNITION_DATABASE_USERNAME: ${POSTGRES_USER:-postgres}
+      NGINX_IGNITION_DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "80:80"      # Web UI
+      - "8090:8090"  # Nginx Ignition Default Port
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - nginx-ignition-network
+
+volumes:
+  postgres-data:
+
+networks:
+  nginx-ignition-network:
+    driver: bridge
