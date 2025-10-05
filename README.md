@@ -22,6 +22,7 @@ You can start, stop, and manage these services independently, making it easy to 
 | infisical             | Infisical            | Secret management for developers |
 | jenkins               | Jenkins              | Automation server for CI/CD |
 | jsreport              | jsreport             | Reporting platform for generating PDFs, etc. |
+| jsoncrack             | JSON Crack           | Visual JSON data explorer and editor |
 | kong                  | Kong                 | API gateway and management |
 | minio                 | MinIO                | High-performance object storage (S3 compatible) |
 | mongodb               | MongoDB              | NoSQL document database |
@@ -63,6 +64,7 @@ hashicorp-vault/
 infisical/
 jenkins/
 jsreport/
+jsoncrack/
 kong/
 minio/
 mongodb/
@@ -111,6 +113,127 @@ To add a new service or update an existing one, follow these guidelines:
 8. **(Optional) Add environment example files** (e.g., `.env.example`) if your service requires environment variables.
 
 By following these conventions, the project will remain organized and easy to maintain.
+
+## Working with Git Submodules
+
+This project uses Git submodules to include external repositories. Submodules allow us to keep external projects as separate repositories while including them in our main project.
+
+### What is a Submodule?
+
+A Git submodule is a repository embedded inside another repository. It maintains its own history and can be updated independently. In this project, we use submodules for services that have their own upstream repositories (e.g., `jsoncrack`).
+
+### Initial Setup (First Time Clone)
+
+If you're cloning this repository for the first time and want to include all submodules:
+
+```bash
+# Clone with all submodules
+git clone --recurse-submodules https://github.com/abcprintf/docker-setup-dev.git
+
+# OR if you already cloned without submodules
+git clone https://github.com/abcprintf/docker-setup-dev.git
+cd docker-setup-dev
+git submodule init
+git submodule update
+```
+
+### Adding a New Submodule
+
+To add a new external repository as a submodule:
+
+```bash
+# Add submodule
+git submodule add <repository-url> <folder-name>
+
+# Example:
+git submodule add https://github.com/AykutSarac/jsoncrack.com.git jsoncrack
+
+# Commit the changes
+git add .gitmodules <folder-name>
+git commit -m "Add <service-name> submodule"
+git push
+```
+
+### Updating Submodules
+
+To update a submodule to the latest version from its repository:
+
+```bash
+# Update specific submodule to latest
+cd <submodule-folder>
+git pull origin main  # or master, depending on the branch
+
+# Go back to main project and commit the update
+cd ..
+git add <submodule-folder>
+git commit -m "Update <submodule-name> to latest version"
+git push
+```
+
+Or update all submodules at once:
+
+```bash
+# Update all submodules to their latest commits
+git submodule update --remote --merge
+
+# Commit the updates
+git add .
+git commit -m "Update all submodules"
+git push
+```
+
+### Checking Submodule Status
+
+```bash
+# View submodule status
+git submodule status
+
+# View submodule configuration
+cat .gitmodules
+```
+
+### Removing a Submodule
+
+If you need to remove a submodule:
+
+```bash
+# Remove the submodule entry from .git/config
+git submodule deinit -f <submodule-folder>
+
+# Remove the submodule from the working tree and .git/modules
+git rm -f <submodule-folder>
+
+# Commit the changes
+git commit -m "Remove <submodule-name> submodule"
+git push
+```
+
+### Common Submodule Issues
+
+**Issue: Submodule folder is empty after clone**
+```bash
+git submodule init
+git submodule update
+```
+
+**Issue: Detached HEAD in submodule**
+```bash
+cd <submodule-folder>
+git checkout main  # or the branch you want
+cd ..
+```
+
+**Issue: Submodule changes not tracked**
+- Submodules are tracked as specific commits, not branches
+- After updating inside a submodule, return to the parent repository and commit the change
+
+### Best Practices
+
+1. **Always commit submodule updates** in the parent repository after updating the submodule
+2. **Document which branch** each submodule should track (usually `main` or `master`)
+3. **Communicate with team** when updating submodules to avoid conflicts
+4. **Use `--recurse-submodules`** flag when cloning to automatically initialize submodules
+5. **Check submodule status** regularly with `git submodule status`
 
 ## Contributing & Reporting Issues
 

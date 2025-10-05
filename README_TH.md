@@ -23,6 +23,7 @@
 | infisical               | Infisical                 | จัดการ secret สำหรับนักพัฒนา |
 | jenkins                 | Jenkins                   | ระบบ automation สำหรับ CI/CD |
 | jsreport                | jsreport                  | ระบบสร้างรายงานและไฟล์ PDF |
+| jsoncrack               | JSON Crack                | เครื่องมือดูและแก้ไข JSON แบบ visual |
 | kong                    | Kong                      | API gateway และจัดการ API |
 | minio                   | MinIO                     | ระบบ object storage ที่ compatible กับ S3 |
 | mongodb                 | MongoDB                   | ฐานข้อมูล NoSQL แบบ document |
@@ -64,6 +65,7 @@ hashicorp-vault/
 infisical/
 jenkins/
 jsreport/
+jsoncrack/
 kong/
 minio/
 mongodb/
@@ -108,6 +110,127 @@ windows/
 6. **ใช้ตัวพิมพ์เล็กและขีดกลาง** (lowercase, hyphen) ในชื่อโฟลเดอร์/ไฟล์
 7. **ทดสอบ service** ด้วย `docker-compose up` ให้แน่ใจว่าใช้งานได้
 8. **(ถ้ามี) เพิ่มไฟล์ตัวอย่าง env** เช่น `.env.example`
+
+## การใช้งาน Git Submodules
+
+โปรเจกต์นี้ใช้ Git submodules เพื่อรวม repository ภายนอกเข้ามา Submodules ช่วยให้เราสามารถเก็บโปรเจกต์ภายนอกเป็น repository แยกต่างหากในขณะที่รวมอยู่ในโปรเจกต์หลักของเรา
+
+### Submodule คืออะไร?
+
+Git submodule คือ repository ที่ฝังอยู่ในอีก repository หนึ่ง มันมี history ของตัวเองและสามารถอัปเดตแยกอิสระได้ ในโปรเจกต์นี้ เราใช้ submodules สำหรับบริการที่มี upstream repository ของตัวเอง (เช่น `jsoncrack`)
+
+### การตั้งค่าครั้งแรก (Clone ครั้งแรก)
+
+หากคุณกำลัง clone repository นี้ครั้งแรกและต้องการรวม submodules ทั้งหมด:
+
+```bash
+# Clone พร้อมกับ submodules ทั้งหมด
+git clone --recurse-submodules https://github.com/abcprintf/docker-setup-dev.git
+
+# หรือถ้า clone ไปแล้วโดยไม่มี submodules
+git clone https://github.com/abcprintf/docker-setup-dev.git
+cd docker-setup-dev
+git submodule init
+git submodule update
+```
+
+### การเพิ่ม Submodule ใหม่
+
+เพื่อเพิ่ม repository ภายนอกเป็น submodule:
+
+```bash
+# เพิ่ม submodule
+git submodule add <repository-url> <folder-name>
+
+# ตัวอย่าง:
+git submodule add https://github.com/AykutSarac/jsoncrack.com.git jsoncrack
+
+# Commit การเปลี่ยนแปลง
+git add .gitmodules <folder-name>
+git commit -m "Add <service-name> submodule"
+git push
+```
+
+### การอัปเดต Submodules
+
+เพื่ออัปเดต submodule ให้เป็นเวอร์ชันล่าสุดจาก repository ต้นทาง:
+
+```bash
+# อัปเดต submodule เฉพาะตัวเป็นเวอร์ชันล่าสุด
+cd <submodule-folder>
+git pull origin main  # หรือ master ขึ้นกับชื่อ branch
+
+# กลับไปที่โปรเจกต์หลักและ commit การอัปเดต
+cd ..
+git add <submodule-folder>
+git commit -m "Update <submodule-name> to latest version"
+git push
+```
+
+หรืออัปเดต submodules ทั้งหมดพร้อมกัน:
+
+```bash
+# อัปเดต submodules ทั้งหมดเป็น commit ล่าสุด
+git submodule update --remote --merge
+
+# Commit การอัปเดต
+git add .
+git commit -m "Update all submodules"
+git push
+```
+
+### ตรวจสอบสถานะ Submodule
+
+```bash
+# ดูสถานะ submodule
+git submodule status
+
+# ดูการตั้งค่า submodule
+cat .gitmodules
+```
+
+### การลบ Submodule
+
+หากต้องการลบ submodule:
+
+```bash
+# ลบ entry ของ submodule จาก .git/config
+git submodule deinit -f <submodule-folder>
+
+# ลบ submodule จาก working tree และ .git/modules
+git rm -f <submodule-folder>
+
+# Commit การเปลี่ยนแปลง
+git commit -m "Remove <submodule-name> submodule"
+git push
+```
+
+### ปัญหาที่พบบ่อยกับ Submodule
+
+**ปัญหา: โฟลเดอร์ submodule ว่างเปล่าหลัง clone**
+```bash
+git submodule init
+git submodule update
+```
+
+**ปัญหา: Detached HEAD ใน submodule**
+```bash
+cd <submodule-folder>
+git checkout main  # หรือ branch ที่ต้องการ
+cd ..
+```
+
+**ปัญหา: การเปลี่ยนแปลงใน submodule ไม่ถูก track**
+- Submodules ถูก track เป็น commit เฉพาะ ไม่ใช่ branch
+- หลังจากอัปเดตใน submodule ต้องกลับมาที่ parent repository และ commit การเปลี่ยนแปลง
+
+### แนวทางปฏิบัติที่ดี
+
+1. **ควร commit การอัปเดต submodule เสมอ** ใน parent repository หลังจากอัปเดต submodule
+2. **จดบันทึกว่า branch ไหน** ที่แต่ละ submodule ควร track (โดยทั่วไปคือ `main` หรือ `master`)
+3. **สื่อสารกับทีม** เมื่อมีการอัปเดต submodules เพื่อหลีกเลี่ยง conflicts
+4. **ใช้ flag `--recurse-submodules`** เมื่อ clone เพื่อ initialize submodules โดยอัตโนมัติ
+5. **ตรวจสอบสถานะ submodule เป็นประจำ** ด้วย `git submodule status`
 
 ## การ contribute หรือแจ้งปัญหา
 
