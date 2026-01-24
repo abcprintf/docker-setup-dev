@@ -1,0 +1,25 @@
+services:
+  owasp-zap:
+    image: ghcr.io/zaproxy/zaproxy:stable
+    container_name: owasp-zap
+    platform: linux/arm64
+    environment:
+      - ZAP_OPTS=-Xmx4g # ให้ Java ใช้ RAM สูงสุด 4GB
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'    # จำกัดให้ใช้สูงสุด 4 Cores (จาก M3 ที่มี 8+)
+          memory: 5G
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./zap-data:/home/zap/.ZAP:rw
+      - ./zap-wrk:/zap/wrk:rw
+    command: >
+      zap.sh -daemon 
+      -host 0.0.0.0 
+      -port 8080 
+      -config api.addrs.addr.name=.* 
+      -config api.addrs.addr.regex=true 
+      -config api.key=secret_key_123
+    restart: unless-stopped
