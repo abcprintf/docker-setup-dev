@@ -3,7 +3,7 @@
 # OWASP ZAP Quick Scan Script
 # Usage: ./quick-scan.sh <target-url>
 
-TARGET_URL="${1:-https://erp2025.gutsgroup.com/}"
+TARGET_URL="${1:-https://<website>/}"
 API_KEY="secret_key_123"
 ZAP_HOST="localhost"
 ZAP_PORT="8080"

@@ -17,29 +17,29 @@ docker ps | grep owasp-zap
 #### วิธีที่ 1: Quick Scan (30 วินาที - เหมาะสำหรับทดสอบ)
 ```bash
 chmod +x quick-scan.sh
-./quick-scan.sh https://erp2025.gutsgroup.com/
+./quick-scan.sh https://<website>/
 ```
 
 #### วิธีที่ 2: Simple Scan (2-5 นาที - Spider + Passive Scan แนะนำ!)
 ```bash
 chmod +x simple-scan.sh
-./simple-scan.sh https://erp2025.gutsgroup.com/
+./simple-scan.sh https://<website>/
 ```
 
 #### วิธีที่ 3: Manual Active Scan (15-60 นาที - หาช่องโหว่แบบลึก)
 ```bash
 # ขั้นตอนที่ 1: รัน Simple Scan ก่อน
-./simple-scan.sh https://erp2025.gutsgroup.com/
+./simple-scan.sh https://<website>/
 
 # ขั้นตอนที่ 2: รัน Active Scan
 chmod +x manual-active-scan.sh
-./manual-active-scan.sh https://erp2025.gutsgroup.com/
+./manual-active-scan.sh https://<website>/
 ```
 
 #### วิธีที่ 4: Full Automated Scan (อาจมีปัญหา - ไม่แนะนำ)
 ```bash
 chmod +x scan-website.sh
-./scan-website.sh https://erp2025.gutsgroup.com/
+./scan-website.sh https://<website>/
 ```
 
 ### 4. ดู Report
