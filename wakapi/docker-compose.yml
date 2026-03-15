@@ -2,9 +2,13 @@ services:
   wakapi:
     image: ghcr.io/muety/wakapi:latest
     container_name: wakapi
+    restart: always # แนะนำให้เพิ่มเพื่อให้ service รันอัตโนมัติหากเครื่อง restart
     ports:
       - "3011:3000"
     environment:
+      ENVIRONMENT: ${ENVIRONMENT}
+      WAKAPI_LEADERBOARD_REQUIRE_AUTH: ${WAKAPI_LEADERBOARD_REQUIRE_AUTH}
+      WAKAPI_DISABLE_LOCAL_AUTH: ${WAKAPI_DISABLE_LOCAL_AUTH}
       WAKAPI_DB_TYPE: "postgres"
       WAKAPI_DB_HOST: "wakapi_db"
       WAKAPI_DB_NAME: "wakapi"
@@ -12,26 +16,50 @@ services:
       WAKAPI_DB_PORT: 5432
       WAKAPI_DB_PASSWORD: ${WAKAPI_DB_PASSWORD}
       WAKAPI_PASSWORD_SALT: ${WAKAPI_PASSWORD_SALT}
-      WAKAPI_MAIL_SMTP_PASS: ${WAKAPI_MAIL_SMTP_PASS}
       WAKAPI_MAIL_ENABLED: ${WAKAPI_MAIL_ENABLED}
       WAKAPI_MAIL_SMTP_HOST: ${WAKAPI_MAIL_SMTP_HOST}
       WAKAPI_MAIL_SMTP_PORT: ${WAKAPI_MAIL_SMTP_PORT}
       WAKAPI_MAIL_SMTP_USER: ${WAKAPI_MAIL_SMTP_USER}
+      WAKAPI_MAIL_SMTP_PASS: ${WAKAPI_MAIL_SMTP_PASS}
+      WAKAPI_MAIL_SENDER: ${WAKAPI_MAIL_SENDER}
       WAKAPI_MAIL_FROM: ${WAKAPI_MAIL_FROM}
       WAKAPI_PUBLIC_URL: ${WAKAPI_PUBLIC_URL}
+      WAKAPI_SUPPORT_CONTACT: ${WAKAPI_SUPPORT_CONTACT}
+      # OpenID Connect (GitLab igenco)
+      WAKAPI_OIDC_ALLOW_SIGNUP: ${WAKAPI_OIDC_ALLOW_SIGNUP:-true}
+      WAKAPI_OIDC_PROVIDERS_0_NAME: "gitlab"
+      WAKAPI_OIDC_PROVIDERS_0_DISPLAY_NAME: "GitLab (igenco)"
+      WAKAPI_OIDC_PROVIDERS_0_CLIENT_ID: ${WAKAPI_GITLAB_CLIENT_ID}
+      WAKAPI_OIDC_PROVIDERS_0_CLIENT_SECRET: ${WAKAPI_GITLAB_CLIENT_SECRET}
+      WAKAPI_OIDC_PROVIDERS_0_ENDPOINT: "https://gitlab.igenco.dev"
+      WAKAPI_OIDC_PROVIDERS_0_USERNAME_CLAIM: "preferred_username"
     depends_on:
-      - wakapi_db
+      wakapi_db:
+        condition: service_healthy # แนะนำให้รอจนกว่า DB จะพร้อมใช้งานจริงๆ
+    networks:
+      - wakapi-network
 
   wakapi_db:
     image: postgres:17-alpine
     container_name: wakapi_db
+    restart: always
     environment:
       POSTGRES_USER: "wakapi"
       POSTGRES_DB: "wakapi"
-      POSTGRES_PASSWORD: ${WAKAPI_DB_PASSWORD} # ดึงจาก .env เช่นกัน
-      POSTGRES_PORT: 5432
+      POSTGRES_PASSWORD: ${WAKAPI_DB_PASSWORD}
     volumes:
       - wakapi-db-data:/var/lib/postgresql/data
+    healthcheck: # เพิ่ม Healthcheck เพื่อให้ service wakapi รู้ว่า DB พร้อมแล้ว
+      test: ["CMD-SHELL", "pg_isready -U wakapi"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - wakapi-network
 
 volumes:
-  wakapi-db-data: {}
+  wakapi-db-data:
+
+networks:
+  wakapi-network:
+    driver: bridge
