@@ -1,0 +1,37 @@
+services:
+  wakapi:
+    image: ghcr.io/muety/wakapi:latest
+    container_name: wakapi
+    ports:
+      - "3011:3000"
+    environment:
+      WAKAPI_DB_TYPE: "postgres"
+      WAKAPI_DB_HOST: "wakapi_db"
+      WAKAPI_DB_NAME: "wakapi"
+      WAKAPI_DB_USER: "wakapi"
+      WAKAPI_DB_PORT: 5432
+      WAKAPI_DB_PASSWORD: ${WAKAPI_DB_PASSWORD}
+      WAKAPI_PASSWORD_SALT: ${WAKAPI_PASSWORD_SALT}
+      WAKAPI_MAIL_SMTP_PASS: ${WAKAPI_MAIL_SMTP_PASS}
+      WAKAPI_MAIL_ENABLED: ${WAKAPI_MAIL_ENABLED}
+      WAKAPI_MAIL_SMTP_HOST: ${WAKAPI_MAIL_SMTP_HOST}
+      WAKAPI_MAIL_SMTP_PORT: ${WAKAPI_MAIL_SMTP_PORT}
+      WAKAPI_MAIL_SMTP_USER: ${WAKAPI_MAIL_SMTP_USER}
+      WAKAPI_MAIL_FROM: ${WAKAPI_MAIL_FROM}
+      WAKAPI_PUBLIC_URL: ${WAKAPI_PUBLIC_URL}
+    depends_on:
+      - wakapi_db
+
+  wakapi_db:
+    image: postgres:17-alpine
+    container_name: wakapi_db
+    environment:
+      POSTGRES_USER: "wakapi"
+      POSTGRES_DB: "wakapi"
+      POSTGRES_PASSWORD: ${WAKAPI_DB_PASSWORD} # ดึงจาก .env เช่นกัน
+      POSTGRES_PORT: 5432
+    volumes:
+      - wakapi-db-data:/var/lib/postgresql/data
+
+volumes:
+  wakapi-db-data: {}
