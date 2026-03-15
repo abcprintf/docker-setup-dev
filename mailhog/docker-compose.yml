@@ -1,0 +1,9 @@
+services:
+  mailhog:
+    platform: linux/amd64
+    image: mailhog/mailhog
+    container_name: mailhog
+    ports:
+      - "1025:1025" # SMTP server
+      - "8025:8025" # HTTP UI
+    restart: always
