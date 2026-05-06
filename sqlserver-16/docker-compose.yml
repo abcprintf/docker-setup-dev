@@ -1,0 +1,32 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-CU12-ubuntu-22.04
+    container_name: sqlserver-16
+    # do not override the container user; let the image start as designed
+    restart: unless-stopped
+
+    ports:
+      - "1433:1433"
+
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "12345Abc%"
+      MSSQL_PID: "Developer"
+      TZ: "Asia/Bangkok"
+
+    shm_size: "1gb"
+
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+      - sqlserver_backup:/var/opt/mssql/backup
+
+    healthcheck:
+      test: ["CMD-SHELL", "grep -q \"SQL Server is now ready for client connections\" /var/opt/mssql/log/errorlog || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+volumes:
+  sqlserver_data:
+  sqlserver_backup:
