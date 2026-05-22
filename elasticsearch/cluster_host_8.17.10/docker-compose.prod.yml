@@ -1,0 +1,138 @@
+
+version: '3'
+
+services:
+  es-node-1:
+    image: elasticsearch:${STACK_VERSION}
+    container_name: es-node-1
+    environment:
+      - cluster.name=es-docker-cluster
+      - node.name=es-node-1
+      - discovery.seed_hosts=es-node-2,es-node-3
+      - bootstrap.memory_lock=${BOOTSTRAP_MEMORY_LOCK}
+      - "ES_JAVA_OPTS=${ES_JAVA_OPTS}"
+      - xpack.security.enabled=${XPACK_SECURITY_ENABLED}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 2GB
+    ports:
+      - "9200:9200"
+    volumes:
+      - ./es-data-1:/usr/share/elasticsearch/data
+      - ./dms-config/elasticsearch/elasticsearch-1.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./dms-config/elasticsearch/thai_synonyms.txt:/usr/share/elasticsearch/config/synonyms/thai_synonyms.txt
+    networks:
+      - es-net
+
+  es-node-2:
+    image: elasticsearch:${STACK_VERSION}
+    container_name: es-node-2
+    environment:
+      - cluster.name=es-docker-cluster
+      - node.name=es-node-2
+      - discovery.seed_hosts=es-node-1,es-node-3
+      - bootstrap.memory_lock=${BOOTSTRAP_MEMORY_LOCK}
+      - "ES_JAVA_OPTS=${ES_JAVA_OPTS}"
+      - xpack.security.enabled=${XPACK_SECURITY_ENABLED}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 2GB
+    volumes:
+      - ./es-data-2:/usr/share/elasticsearch/data
+      - ./dms-config/elasticsearch/elasticsearch-2.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./dms-config/elasticsearch/thai_synonyms.txt:/usr/share/elasticsearch/config/synonyms/thai_synonyms.txt
+    networks:
+      - es-net
+
+  es-node-3:
+    image: elasticsearch:${STACK_VERSION}
+    container_name: es-node-3
+    environment:
+      - cluster.name=es-docker-cluster
+      - node.name=es-node-3
+      - discovery.seed_hosts=es-node-1,es-node-2
+      - bootstrap.memory_lock=${BOOTSTRAP_MEMORY_LOCK}
+      - "ES_JAVA_OPTS=${ES_JAVA_OPTS}"
+      - xpack.security.enabled=${XPACK_SECURITY_ENABLED}
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    deploy:
+      resources:
+        limits:
+          memory: 2GB
+    volumes:
+      - ./es-data-3:/usr/share/elasticsearch/data
+      - ./dms-config/elasticsearch/elasticsearch-3.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./dms-config/elasticsearch/thai_synonyms.txt:/usr/share/elasticsearch/config/synonyms/thai_synonyms.txt
+    networks:
+      - es-net
+
+  kibana:
+    image: kibana:${STACK_VERSION}
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es-node-1:9200
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./dms-config/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+      - ./kb-data:/usr/share/kibana/data
+    networks:
+      - es-net
+
+  logstash:
+    image: logstash:${STACK_VERSION}
+    container_name: logstash
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./dms-config/logstash/logstash.conf:/usr/share/logstash/pipeline/logstash.conf
+      - ./dms-config/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ./ls_data:/usr/share/logstash/data
+    networks:
+      - es-net
+    depends_on:
+      - es-node-1
+      - es-node-2
+      - es-node-3
+
+  filebeat:
+    image: elastic/filebeat:${STACK_VERSION}
+    container_name: filebeat
+    user: root
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    volumes:
+      - ./dms-config/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /var/log/syslog:/var/log/syslog:ro
+      - /var/log/auth.log:/var/log/auth.log:ro
+    networks:
+      - es-net
+    depends_on:
+      - es-node-1
+      - es-node-2
+      - es-node-3
+      - kibana
+
+networks:
+  es-net:
+    driver: bridge
+
+volumes:
+  es-data-1:
+  es-data-2:
+  es-data-3:

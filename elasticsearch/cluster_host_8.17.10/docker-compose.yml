@@ -1,0 +1,42 @@
+version: '3'
+
+services:
+  es-app:
+    image: elasticsearch:8.17.10
+    container_name: es-app
+    environment:
+      - discovery.type=single-node
+      - cluster.name=es-docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=true
+      - xpack.security.http.ssl.enabled=false
+      - ELASTIC_PASSWORD=  # กำหนดรหัสผ่านของ user: elastic (built-in)
+    ports:
+      - 9200:9200
+      - 9300:9300
+    volumes:
+      - ./es-data:/usr/share/elasticsearch/data
+      - ./dms-config/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - ./dms-config/elasticsearch/thai_synonyms.txt:/usr/share/elasticsearch/config/synonyms/thai_synonyms.txt
+    networks:
+      - es-net
+    restart: unless-stopped
+
+  kibana-app:
+    image: kibana:8.17.10
+    container_name: kibana-app
+    environment:
+      - ELASTICSEARCH_HOSTS=http://es-app:9200
+      - ELASTICSEARCH_SERVICEACCOUNTTOKEN=AAEAAWVsYXN0aWMva2liYW5hL2tpYmFuYS10b2tlbjpyN3BINzhBWlIyQ2dDTUZJNmFRdnln
+      - NODE_OPTIONS=--no-warnings
+      - XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY=changemechangemechangemechangeme
+    ports:
+      - 5601:5601
+    networks:
+      - es-net
+    restart: unless-stopped
+
+networks:
+  es-net:
+    driver: bridge
