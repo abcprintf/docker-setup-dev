@@ -1,5 +1,6 @@
 services:
   sqlserver:
+    platform: linux/amd64
     image: mcr.microsoft.com/mssql/server:2022-CU12-ubuntu-22.04
     container_name: sqlserver-16
     # do not override the container user; let the image start as designed
